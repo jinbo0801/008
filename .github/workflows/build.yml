@@ -1,0 +1,18 @@
+name: Build OnePlus 9R Kernel
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Kernel
+        uses: dabao1955/kernel_build_action@main
+        with:
+          kernel-url: https://github.com/toraidl/android_kernel_oneplus_sm8250
+          kernel-branch: bpf-5.15-backport
+          config: vendor/kona-perf_defconfig
+          arch: arm64
+          aosp-clang: true
+          aosp-clang-version: r383902
+          ksu: true
+          anykernel3: true
