@@ -12,8 +12,7 @@ jobs:
           kernel-branch: bpf-5.15-backport
           config: vendor/kona-perf_defconfig
           arch: arm64
-          aosp-clang: true
-          aosp-clang-version: r383902
-          aosp-gcc: true
+          other-clang-url: https://github.com/kdrag0n/proton-clang
+          other-clang-branch: master
           ksu: true
           anykernel3: true
