@@ -8,7 +8,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git ccache build-essential libssl-dev flex bison bc cpio zip unzip python3
+          sudo apt-get install -y git ccache build-essential libssl-dev flex bison bc cpio zip unzip python3 libelf-dev libdw-dev
 
       - name: Clone toolchain
         run: git clone --depth=1 https://github.com/kdrag0n/proton-clang.git $HOME/clang
