@@ -24,16 +24,15 @@ jobs:
       - name: Configure
         run: |
           cd $HOME/kernel
-          export PATH=$HOME/clang/bin:$PATH
-          make O=out ARCH=arm64 CC=clang vendor/kona-perf_defconfig
+          make O=out ARCH=arm64 HOSTCC=/usr/bin/gcc vendor/kona-perf_defconfig
           ./scripts/config --file out/.config -e KSU -e KPROBES -e HAVE_KPROBES -e KPROBE_EVENTS -e KRETPROBES
-          make O=out ARCH=arm64 CC=clang olddefconfig
+          make O=out ARCH=arm64 HOSTCC=/usr/bin/gcc olddefconfig
 
       - name: Build kernel
         run: |
           cd $HOME/kernel
-          export PATH=$HOME/clang/bin:$PATH
-          make -j$(nproc) O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu-
+          C=$HOME/clang
+          make -j$(nproc) O=out ARCH=arm64 CC=$C/bin/clang CROSS_COMPILE=$C/bin/aarch64-linux-gnu- HOSTCC=/usr/bin/gcc HOSTCXX=/usr/bin/g++
 
       - name: Package AnyKernel3
         run: |
