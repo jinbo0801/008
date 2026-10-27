@@ -5,14 +5,53 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Build Kernel
-        uses: dabao1955/kernel_build_action@main
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git ccache build-essential libssl-dev flex bison bc cpio zip unzip python3
+
+      - name: Clone toolchain
+        run: git clone --depth=1 https://github.com/kdrag0n/proton-clang.git $HOME/clang
+
+      - name: Clone kernel source
+        run: git clone --depth=1 -b bpf-5.15-backport https://github.com/toraidl/android_kernel_oneplus_sm8250.git $HOME/kernel
+
+      - name: Integrate KernelSU
+        run: |
+          cd $HOME/kernel
+          curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s main
+
+      - name: Configure
+        run: |
+          cd $HOME/kernel
+          export PATH=$HOME/clang/bin:$PATH
+          make O=out ARCH=arm64 CC=clang vendor/kona-perf_defconfig
+          ./scripts/config --file out/.config -e KSU -e KPROBES -e HAVE_KPROBES -e KPROBE_EVENTS -e KRETPROBES
+          make O=out ARCH=arm64 CC=clang olddefconfig
+
+      - name: Build kernel
+        run: |
+          cd $HOME/kernel
+          export PATH=$HOME/clang/bin:$PATH
+          make -j$(nproc) O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu-
+
+      - name: Package AnyKernel3
+        run: |
+          git clone --depth=1 https://github.com/osm0sis/AnyKernel3.git $HOME/ak
+          cd $HOME/ak
+          K=$HOME/kernel/out/arch/arm64/boot
+          if [ -f "$K/Image.gz" ]; then
+            cp "$K/Image.gz" .
+          else
+            cp "$K/Image" .
+            sed -i 's/^kernel.image=.*/kernel.image=Image/' anykernel.sh
+          fi
+          sed -i 's/^device.name1=.*/device.name1=lemonades/' anykernel.sh
+          sed -i 's/^device.name2=.*/device.name2=OnePlus9R/' anykernel.sh
+          zip -r9 $HOME/SukiSU-lemonades.zip . -x .git/\*
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          kernel-url: https://github.com/toraidl/android_kernel_oneplus_sm8250
-          kernel-branch: bpf-5.15-backport
-          config: vendor/kona-perf_defconfig
-          arch: arm64
-          other-clang-url: https://github.com/kdrag0n/proton-clang
-          other-clang-branch: master
-          ksu: true
-          anykernel3: true
+          name: SukiSU-lemonades-kernel
+          path: /home/runner/SukiSU-lemonades.zip
